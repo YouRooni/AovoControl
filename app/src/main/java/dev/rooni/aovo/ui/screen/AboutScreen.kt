@@ -9,43 +9,23 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
-import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.Code
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Forum
-import androidx.compose.material.icons.filled.Handshake
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -60,10 +40,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.rooni.aovo.BuildConfig
 import dev.rooni.aovo.R
+import dev.rooni.aovo.ui.AovoViewModel
 import dev.rooni.aovo.ui.Haptic
 import dev.rooni.aovo.ui.LocalHaptics
+import dev.rooni.aovo.ui.UpdateState
 import dev.rooni.aovo.ui.component.Section
 import dev.rooni.aovo.ui.component.SectionTitle
 import dev.rooni.aovo.ui.component.SettingRow
@@ -75,28 +58,20 @@ import kotlin.random.Random
 
 private const val AUTHOR_URL = "https://t.me/YouRooni"
 private const val CHANNEL_URL = "https://t.me/RnPlugins"
+private const val DONATE_URL = "https://t.me/payRooni"
 private const val GITHUB_URL = "https://github.com/YouRooni/AovoControl"
 private const val FORUM_URL = "https://4pda.to/forum/index.php?showtopic=1125489"
 private const val CONTRIBUTOR_URL = "https://t.me/vova7878"
-private const val DONATE_URL = "https://t.me/payRooni"
-
-private data class Particle(
-    val angle: Double,
-    val speed: Float,
-    val color: Color,
-    val size: Float,
-    val isCircle: Boolean,
-    val rotationSpeed: Float,
-)
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun AboutScreen(modifier: Modifier = Modifier) {
+fun AboutScreen(viewModel: AovoViewModel? = null, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val haptics = LocalHaptics.current
     val scope = rememberCoroutineScope()
 
     var easterEggTrigger by remember { mutableLongStateOf(0L) }
+    val updateState = viewModel?.updateState?.collectAsStateWithLifecycle()?.value ?: UpdateState.Idle
 
     fun openUrl(url: String) {
         runCatching {
@@ -170,18 +145,54 @@ fun AboutScreen(modifier: Modifier = Modifier) {
 
             Spacer(Modifier.height(6.dp))
 
-            // Version badge chip
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.secondaryContainer,
+            // Version badge row with refresh icon button
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
             ) {
-                Text(
-                    text = "v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer,
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-                )
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                ) {
+                    Text(
+                        text = "v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                    )
+                }
+
+                if (viewModel != null) {
+                    Spacer(Modifier.width(8.dp))
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clickable(enabled = updateState !is UpdateState.Checking) {
+                                haptics?.perform(Haptic.Press)
+                                viewModel.checkForUpdates(isManual = true)
+                            },
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            if (updateState is UpdateState.Checking) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(16.dp),
+                                    strokeWidth = 2.dp,
+                                    color = MaterialTheme.colorScheme.primary,
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Filled.Refresh,
+                                    contentDescription = stringResource(R.string.check_updates),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(18.dp),
+                                )
+                            }
+                        }
+                    }
+                }
             }
 
             Spacer(Modifier.height(12.dp))
@@ -225,7 +236,7 @@ fun AboutScreen(modifier: Modifier = Modifier) {
                         title = stringResource(R.string.telegram_channel),
                         subtitle = stringResource(R.string.telegram_channel_desc),
                         value = "@RnPlugins",
-                        icon = Icons.AutoMirrored.Filled.Send,
+                        icon = Icons.Filled.Campaign,
                         trailing = {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.OpenInNew,
@@ -326,8 +337,43 @@ fun AboutScreen(modifier: Modifier = Modifier) {
                 onFinished = { easterEggTrigger = 0L }
             )
         }
+
+        if (updateState is UpdateState.UpToDate && updateState.isManual) {
+            AlertDialog(
+                onDismissRequest = { viewModel?.dismissUpdate() },
+                title = { Text(stringResource(R.string.latest_version_installed), fontWeight = FontWeight.Bold) },
+                text = { Text(stringResource(R.string.latest_version_installed_desc, BuildConfig.VERSION_NAME)) },
+                confirmButton = {
+                    TextButton(onClick = { viewModel?.dismissUpdate() }) {
+                        Text(stringResource(R.string.great))
+                    }
+                }
+            )
+        }
+
+        if (updateState is UpdateState.Error && updateState.isManual) {
+            AlertDialog(
+                onDismissRequest = { viewModel?.dismissUpdate() },
+                title = { Text(stringResource(R.string.update_check_failed), fontWeight = FontWeight.Bold) },
+                text = { Text(stringResource(R.string.update_check_failed_desc)) },
+                confirmButton = {
+                    TextButton(onClick = { viewModel?.dismissUpdate() }) {
+                        Text(stringResource(android.R.string.ok))
+                    }
+                }
+            )
+        }
     }
 }
+
+private data class Particle(
+    val angle: Double,
+    val speed: Float,
+    val color: Color,
+    val size: Float,
+    val isCircle: Boolean,
+    val rotationSpeed: Float,
+)
 
 @Composable
 private fun ConfettiFirework(trigger: Long, onFinished: () -> Unit) {

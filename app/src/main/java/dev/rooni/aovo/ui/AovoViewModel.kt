@@ -1,35 +1,27 @@
 package dev.rooni.aovo.ui
 
-import dev.rooni.aovo.ble.VicontApiClient
-import kotlinx.coroutines.flow.update
-
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
+
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import dev.rooni.aovo.AovoApp
 import dev.rooni.aovo.R
-import dev.rooni.aovo.ble.AovoCore
-import dev.rooni.aovo.ble.AuthMode
-import dev.rooni.aovo.ble.ConnectionState
-import dev.rooni.aovo.ble.CoreEvent
-import dev.rooni.aovo.ble.ScannedDevice
-import dev.rooni.aovo.ble.ScooterFamily
-import dev.rooni.aovo.ble.Telemetry
-import dev.rooni.aovo.data.AppSettings
-import dev.rooni.aovo.data.DashboardLayout
-import dev.rooni.aovo.data.DashboardTile
-import dev.rooni.aovo.data.Prefs
-import dev.rooni.aovo.data.ProfileCapture
-import dev.rooni.aovo.data.ProfileIcons
-import dev.rooni.aovo.data.RideProfile
-import dev.rooni.aovo.data.SessionLog
-import dev.rooni.aovo.data.TileType
-import dev.rooni.aovo.data.ThemeMode
+import dev.rooni.aovo.ble.*
+import dev.rooni.aovo.data.*
+import dev.rooni.aovo.util.AppRelease
+import dev.rooni.aovo.util.AppUpdateManager
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+
+sealed interface UpdateState {
+    object Idle : UpdateState
+    object Checking : UpdateState
+    data class Available(val release: AppRelease, val isManual: Boolean) : UpdateState
+    data class UpToDate(val isManual: Boolean) : UpdateState
+    data class Error(val isManual: Boolean) : UpdateState
+}
 
 class AovoViewModel : ViewModel() {
 
@@ -51,6 +43,9 @@ class AovoViewModel : ViewModel() {
 
     private val _snackbar = MutableStateFlow<String?>(null)
     val snackbar = _snackbar.asStateFlow()
+
+    private val _updateState = MutableStateFlow<UpdateState>(UpdateState.Idle)
+    val updateState: StateFlow<UpdateState> = _updateState.asStateFlow()
 
     /** Device the user picked but has not yet supplied a password for. */
     private val _passwordPrompt = MutableStateFlow<ScannedDevice?>(null)
@@ -122,6 +117,7 @@ class AovoViewModel : ViewModel() {
                 core.setAutoReconnect(target, current.lastDevicePassword)
             }
         }
+        checkForUpdates(isManual = false)
     }
 
         fun changePassword(newPassword: String) {
@@ -439,4 +435,37 @@ class AovoViewModel : ViewModel() {
             }
         }
     }
+
+    fun checkForUpdates(isManual: Boolean = false) {
+        viewModelScope.launch {
+            _updateState.value = UpdateState.Checking
+            val result = AppUpdateManager.checkForUpdates()
+            result.onSuccess { release ->
+                if (release != null) {
+                    val ignored = prefs.settings.first().ignoredUpdateVersion
+                    if (isManual || release.tagName != ignored) {
+                        _updateState.value = UpdateState.Available(release, isManual)
+                    } else {
+                        _updateState.value = UpdateState.Idle
+                    }
+                } else {
+                    _updateState.value = if (isManual) UpdateState.UpToDate(isManual = true) else UpdateState.Idle
+                }
+            }.onFailure {
+                _updateState.value = if (isManual) UpdateState.Error(isManual = true) else UpdateState.Idle
+            }
+        }
+    }
+
+    fun dismissUpdate() {
+        _updateState.value = UpdateState.Idle
+    }
+
+    fun ignoreUpdate(version: String) {
+        viewModelScope.launch {
+            prefs.setIgnoredUpdateVersion(version)
+            _updateState.value = UpdateState.Idle
+        }
+    }
+
 }

@@ -264,6 +264,20 @@ fun SettingsScreen(
                 )
             }
             tile { shape ->
+                SettingRow(
+                    shape = shape,
+                    title = stringResource(R.string.forget_device),
+                    subtitle = settings.lastDeviceName.ifBlank { null },
+                    icon = Icons.Filled.Delete,
+                    enabled = settings.lastDeviceAddress.isNotEmpty(),
+                    onClick = { confirmForget = true },
+                )
+            }
+        }
+
+        SectionTitle(stringResource(R.string.section_application))
+        Section {
+            tile { shape ->
                 SwitchRow(
                     shape = shape,
                     title = stringResource(R.string.haptics),
@@ -293,7 +307,6 @@ fun SettingsScreen(
                     onCheckedChange = { viewModel.setLogging(it) },
                 )
             }
-            // disappears with the switch because turning logging off discards it.
             tileIf(settings.logging) { shape ->
                 SettingRow(
                     shape = shape,
@@ -304,16 +317,6 @@ fun SettingsScreen(
                     icon = Icons.Filled.Download,
                     enabled = logEntries.isNotEmpty(),
                     onClick = { exportLog.launch(viewModel.logFileName()) },
-                )
-            }
-            tile { shape ->
-                SettingRow(
-                    shape = shape,
-                    title = stringResource(R.string.forget_device),
-                    subtitle = settings.lastDeviceName.ifBlank { null },
-                    icon = Icons.Filled.Delete,
-                    enabled = settings.lastDeviceAddress.isNotEmpty(),
-                    onClick = { confirmForget = true },
                 )
             }
         }

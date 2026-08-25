@@ -1,78 +1,43 @@
 package dev.rooni.aovo.ui
 
-import androidx.compose.animation.AnimatedContent
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.animation.*
 import androidx.compose.animation.AnimatedContentTransitionScope.SlideDirection
-import androidx.navigation.NavBackStackEntry
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.SizeTransform
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.togetherWith
-import androidx.compose.ui.Alignment
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Insights
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Speed
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material.icons.filled.Terminal
-import dev.rooni.aovo.ui.screen.ManualCommandDialog
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTopAppBarState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import dev.rooni.aovo.R
-import dev.rooni.aovo.ui.screen.ControllerScreen
-import dev.rooni.aovo.ui.screen.DashboardScreen
-import dev.rooni.aovo.ui.screen.DataScreen
-import dev.rooni.aovo.ui.screen.DevicesSheet
-import dev.rooni.aovo.ui.screen.FirmwareScreen
-import dev.rooni.aovo.ui.screen.EngineeringScreen
-import dev.rooni.aovo.ui.screen.ModuleScreen
-import dev.rooni.aovo.ui.screen.PasswordDialog
-import dev.rooni.aovo.ui.screen.ProfilesScreen
-import dev.rooni.aovo.ui.screen.RideSettingsScreen
-import dev.rooni.aovo.ui.screen.AboutScreen
-import dev.rooni.aovo.ui.screen.SettingsScreen
+import dev.rooni.aovo.ui.screen.*
 
-private object Routes {
+object Routes {
     const val DASHBOARD = "dashboard"
     const val DATA = "data"
     const val SETTINGS = "settings"
@@ -87,9 +52,10 @@ private object Routes {
 
 private val topLevel = setOf(Routes.DASHBOARD, Routes.DATA, Routes.SETTINGS)
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AovoAppScaffold(viewModel: AovoViewModel) {
+    val context = LocalContext.current
     val navController = rememberNavController()
     val backStack by navController.currentBackStackEntryAsState()
     val route = backStack?.destination?.route ?: Routes.DASHBOARD
@@ -105,7 +71,6 @@ fun AovoAppScaffold(viewModel: AovoViewModel) {
         viewModel.clearSnackbar()
     }
 
-    // Lives here rather than in the screen because the button that opens it is in the bar.
     var manualCommand by remember { mutableStateOf(false) }
     val appBarState = rememberTopAppBarState()
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(appBarState)
@@ -123,65 +88,60 @@ fun AovoAppScaffold(viewModel: AovoViewModel) {
                 shadowElevation = shadowElevation,
                 tonalElevation = if (isScrolled) 2.dp else 0.dp,
             ) {
-            TopAppBar(
-                scrollBehavior = scrollBehavior,
-                // part of the page; a shallow lift puts it back on its own layer.
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-                ),
-                title = {
-                    // change, so a screen change does not read as the bar blinking.
-                    AnimatedContent(
-                        targetState = titleFor(route),
-                        transitionSpec = {
-                            (fadeIn(tween(220, delayMillis = 60)) togetherWith
-                                fadeOut(tween(140))).using(SizeTransform(clip = false))
-                        },
-                        label = "title",
-                    ) { title ->
-                        Text(text = stringResource(title), fontWeight = FontWeight.SemiBold)
-                    }
-                },
-                navigationIcon = {
-                    AnimatedVisibility(
-                        visible = route !in topLevel,
-                        enter = fadeIn(tween(200)),
-                        exit = fadeOut(tween(140)),
-                    ) {
-                        IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = null,
-                            )
+                TopAppBar(
+                    scrollBehavior = scrollBehavior,
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    ),
+                    title = {
+                        AnimatedContent(
+                            targetState = titleFor(route),
+                            transitionSpec = {
+                                (fadeIn(tween(220, delayMillis = 60)) togetherWith
+                                    fadeOut(tween(140))).using(SizeTransform(clip = false))
+                            },
+                            label = "title",
+                        ) { title ->
+                            Text(text = stringResource(title), fontWeight = FontWeight.SemiBold)
                         }
-                    }
-                },
-                actions = {
-                    if (route == Routes.SETTINGS) {
-                        IconButton(onClick = { navController.navigate(Routes.ABOUT) }) {
-                            Icon(
-                                imageVector = Icons.Filled.Info,
-                                contentDescription = stringResource(R.string.about),
-                            )
+                    },
+                    navigationIcon = {
+                        AnimatedVisibility(
+                            visible = route !in topLevel,
+                            enter = fadeIn(tween(200)),
+                            exit = fadeOut(tween(140)),
+                        ) {
+                            IconButton(onClick = { navController.popBackStack() }) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = null,
+                                )
+                            }
                         }
-                    }
-                    // Probing unmapped commands belongs with the engineering menu and
-                    // nowhere else, so the button appears only on that screen.
-                    if (route == Routes.ENGINEERING) {
-                        IconButton(onClick = { manualCommand = true }) {
-                            Icon(
-                                imageVector = Icons.Filled.Terminal,
-                                contentDescription = stringResource(R.string.manual_command),
-                            )
+                    },
+                    actions = {
+                        if (route == Routes.SETTINGS) {
+                            IconButton(onClick = { navController.navigate(Routes.ABOUT) }) {
+                                Icon(
+                                    imageVector = Icons.Filled.Info,
+                                    contentDescription = stringResource(R.string.about),
+                                )
+                            }
                         }
-                    }
-                },
-            )
+                        if (route == Routes.ENGINEERING) {
+                            IconButton(onClick = { manualCommand = true }) {
+                                Icon(
+                                    imageVector = Icons.Filled.Terminal,
+                                    contentDescription = stringResource(R.string.manual_command),
+                                )
+                            }
+                        }
+                    },
+                )
             }
         },
         bottomBar = {
-            // frame, so the page slides down with the bar instead of jumping once it goes.
             AnimatedVisibility(
                 visible = route in topLevel,
                 enter = expandVertically(
@@ -200,29 +160,29 @@ fun AovoAppScaffold(viewModel: AovoViewModel) {
                 ) + fadeOut(tween(140)),
             ) {
                 Surface(shadowElevation = 8.dp) {
-                NavigationBar(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                    tonalElevation = 3.dp,
-                ) {
-                    NavigationBarItem(
-                        selected = route == Routes.DASHBOARD,
-                        onClick = { navController.switchTo(Routes.DASHBOARD) },
-                        icon = { Icon(Icons.Filled.Speed, null) },
-                        label = { Text(stringResource(R.string.nav_dashboard)) },
-                    )
-                    NavigationBarItem(
-                        selected = route == Routes.DATA,
-                        onClick = { navController.switchTo(Routes.DATA) },
-                        icon = { Icon(Icons.Filled.Insights, null) },
-                        label = { Text(stringResource(R.string.nav_data)) },
-                    )
-                    NavigationBarItem(
-                        selected = route == Routes.SETTINGS,
-                        onClick = { navController.switchTo(Routes.SETTINGS) },
-                        icon = { Icon(Icons.Filled.Settings, null) },
-                        label = { Text(stringResource(R.string.nav_settings)) },
-                    )
-                }
+                    NavigationBar(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                        tonalElevation = 3.dp,
+                    ) {
+                        NavigationBarItem(
+                            selected = route == Routes.DASHBOARD,
+                            onClick = { navController.switchTo(Routes.DASHBOARD) },
+                            icon = { Icon(Icons.Filled.Speed, null) },
+                            label = { Text(stringResource(R.string.nav_dashboard)) },
+                        )
+                        NavigationBarItem(
+                            selected = route == Routes.DATA,
+                            onClick = { navController.switchTo(Routes.DATA) },
+                            icon = { Icon(Icons.Filled.Insights, null) },
+                            label = { Text(stringResource(R.string.nav_data)) },
+                        )
+                        NavigationBarItem(
+                            selected = route == Routes.SETTINGS,
+                            onClick = { navController.switchTo(Routes.SETTINGS) },
+                            icon = { Icon(Icons.Filled.Settings, null) },
+                            label = { Text(stringResource(R.string.nav_settings)) },
+                        )
+                    }
                 }
             }
         },
@@ -232,8 +192,6 @@ fun AovoAppScaffold(viewModel: AovoViewModel) {
             navController = navController,
             startDestination = Routes.DASHBOARD,
             modifier = Modifier.padding(padding),
-            // the order of the bottom bar, while opening a detail screen always comes in
-            // from the trailing edge.
             enterTransition = {
                 val forward = travelsForward(initialState, targetState)
                 slideIntoContainer(
@@ -290,7 +248,7 @@ fun AovoAppScaffold(viewModel: AovoViewModel) {
             composable(Routes.MODULE) { ModuleScreen(viewModel) }
             composable(Routes.ENGINEERING) { EngineeringScreen(viewModel) }
             composable(Routes.PROFILES) { ProfilesScreen(viewModel) }
-            composable(Routes.ABOUT) { AboutScreen() }
+            composable(Routes.ABOUT) { AboutScreen(viewModel) }
         }
     }
 
@@ -308,6 +266,93 @@ fun AovoAppScaffold(viewModel: AovoViewModel) {
 
     if (manualCommand) {
         ManualCommandDialog(viewModel) { manualCommand = false }
+    }
+
+    val updateState by viewModel.updateState.collectAsStateWithLifecycle()
+    val availableUpdate = (updateState as? UpdateState.Available)?.release
+    if (availableUpdate != null) {
+        AlertDialog(
+            onDismissRequest = viewModel::dismissUpdate,
+            icon = {
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            Icons.Filled.SystemUpdate,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+            },
+            title = {
+                Text(
+                    text = stringResource(R.string.update_available),
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+            },
+            text = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = stringResource(R.string.update_available_desc, availableUpdate.tagName),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    if (availableUpdate.body.isNotBlank()) {
+                        Spacer(Modifier.height(12.dp))
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = 200.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .padding(12.dp)
+                                    .verticalScroll(rememberScrollState())
+                            ) {
+                                Text(
+                                    text = availableUpdate.body,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.dismissUpdate()
+                        val uri = Uri.parse(availableUpdate.htmlUrl)
+                        context.startActivity(Intent(Intent.ACTION_VIEW, uri))
+                    }
+                ) {
+                    Text(stringResource(R.string.update_view_release))
+                }
+            },
+            dismissButton = {
+                Row {
+                    TextButton(onClick = { viewModel.ignoreUpdate(availableUpdate.tagName) }) {
+                        Text(stringResource(R.string.update_skip_version))
+                    }
+                    Spacer(Modifier.width(4.dp))
+                    TextButton(onClick = viewModel::dismissUpdate) {
+                        Text(stringResource(R.string.update_later))
+                    }
+                }
+            }
+        )
     }
 }
 

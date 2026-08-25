@@ -1,13 +1,13 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name">Aovo Control</string>
 
-    <!-- navigation -->
+    
     <string name="nav_dashboard">Dashboard</string>
     <string name="nav_data">Data</string>
     <string name="nav_settings">Settings</string>
 
-    <!-- connection -->
+    
     <string name="connect">Connect</string>
     <string name="disconnect">Disconnect</string>
     <string name="connected">Connected</string>
@@ -34,7 +34,7 @@
     <string name="signal">Signal</string>
     <string name="locked_device">Password protected</string>
 
-    <!-- dashboard -->
+    
     <string name="ready_to_ride">Ready to ride</string>
     <string name="tap_to_connect">Tap connect to begin</string>
     <string name="mode_eco">ECO</string>
@@ -50,11 +50,11 @@
     <string name="unlocked">Unlocked</string>
     <string name="lock_requires_stop">Stop the scooter before locking it.</string>
 
-    <!-- the controller only accepts parameter writes at a standstill -->
+    
     <string name="settings_locked_moving">Stop the scooter first - the controller ignores this above %1$d km/h.</string>
     <string name="settings_locked_banner">The scooter is moving. Speed limits and response settings are only accepted below %1$d km/h - sent now, the controller confirms them and keeps riding on the old values.</string>
 
-    <!-- telemetry -->
+    
     <string name="battery">Battery</string>
     <string name="speed">Speed</string>
     <string name="voltage">Voltage</string>
@@ -71,7 +71,7 @@
     <string name="last_service">Last service at</string>
     <string name="km_to_service">Distance to service</string>
 
-    <!-- units -->
+    
     <string name="unit_kmh">km/h</string>
     <string name="unit_mph">mph</string>
     <string name="unit_km">km</string>
@@ -85,7 +85,7 @@
     <string name="unit_minutes">min</string>
     <string name="unit_inch">in</string>
 
-    <!-- ride settings -->
+    
     <string name="ride_settings">Ride settings</string>
     <string name="cruise_control">Cruise control</string>
     <string name="cruise_control_info">Hold the throttle steady for about 5 seconds until you hear the beeps.</string>
@@ -101,7 +101,7 @@
     <string name="limit_sport">Sport limit</string>
     <string name="speed_limit">Speed limit</string>
 
-    <!-- controller -->
+    
     <string name="controller">Controller</string>
     <string name="controller_params">Controller parameters</string>
     <string name="reading_params">Reading registers…</string>
@@ -123,7 +123,7 @@
     <string name="expert_params">Expert parameters</string>
     <string name="expert_warning">These registers change how the controller drives the motor. Wrong values can immobilise the scooter or damage hardware.</string>
 
-    <!-- firmware -->
+    
     <string name="firmware">Firmware</string>
     <string name="model">Model</string>
     <string name="hardware_version">Hardware version</string>
@@ -139,7 +139,7 @@
     <string name="flash_failed">Update failed</string>
     <string name="refresh_info">Re-read controller</string>
 
-    <!-- module -->
+    
     <string name="module">Bluetooth module</string>
     <string name="rename_scooter">Rename scooter</string>
     <string name="new_name">New name</string>
@@ -160,7 +160,7 @@
     <string name="query">Query</string>
     <string name="module_feature_note">NFC, voice prompts and drive mode depend on hardware support on your scooter model.</string>
 
-    <!-- appearance -->
+    
     <string name="appearance">Appearance</string>
     <string name="theme">Theme</string>
     <string name="theme_system">System default</string>
@@ -437,4 +437,18 @@
     <string name="credits_research">Protocol Research</string>
     <string name="credits_research_desc">ViCont protocol documentation and reverse-engineering assistance</string>
 
+
+    
+    <string name="section_application">Application</string>
+    <string name="check_updates">Check for updates</string>
+    <string name="latest_version_installed">You are up to date</string>
+    <string name="latest_version_installed_desc">Aovo Control %1$s is the latest version.</string>
+    <string name="update_available">Update available</string>
+    <string name="update_available_desc">New version %1$s is available</string>
+    <string name="update_view_release">View Release</string>
+    <string name="update_later">Later</string>
+    <string name="update_skip_version">Skip this version</string>
+    <string name="update_check_failed">Update check failed</string>
+    <string name="update_check_failed_desc">Could not connect to GitHub. Please check your internet connection.</string>
+    <string name="great">Great</string>
 </resources>

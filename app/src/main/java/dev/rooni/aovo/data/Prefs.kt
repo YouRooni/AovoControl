@@ -30,6 +30,7 @@ data class AppSettings(
     val lastDevicePassword: String = "",
     val dashboard: DashboardLayout = DashboardLayout.Default,
     val profiles: List<RideProfile> = emptyList(),
+    val ignoredUpdateVersion: String = "",
 )
 
 class Prefs(private val context: Context) {
@@ -52,6 +53,7 @@ class Prefs(private val context: Context) {
         lastDevicePassword = this[KEY_PASSWORD].orEmpty(),
         dashboard = DashboardLayout.decode(this[KEY_DASHBOARD]),
         profiles = RideProfile.decode(this[KEY_PROFILES]),
+        ignoredUpdateVersion = this[KEY_IGNORED_UPDATE].orEmpty(),
     )
 
     suspend fun setTheme(mode: ThemeMode) = edit { it[KEY_THEME] = mode.ordinal }
@@ -73,6 +75,8 @@ class Prefs(private val context: Context) {
     }
 
     suspend fun resetDashboard() = edit { it.remove(KEY_DASHBOARD) }
+
+    suspend fun setIgnoredUpdateVersion(version: String) = edit { it[KEY_IGNORED_UPDATE] = version }
 
     suspend fun setProfiles(profiles: List<RideProfile>) = edit {
         it[KEY_PROFILES] = RideProfile.encode(profiles)
@@ -110,5 +114,6 @@ class Prefs(private val context: Context) {
         val KEY_PASSWORD = stringPreferencesKey("device_password")
         val KEY_DASHBOARD = stringPreferencesKey("dashboard_layout")
         val KEY_PROFILES = stringPreferencesKey("ride_profiles")
+        val KEY_IGNORED_UPDATE = stringPreferencesKey("ignored_update_version")
     }
 }
