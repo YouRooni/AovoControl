@@ -1,0 +1,213 @@
+{
+  "parameter": [
+    {
+      "no": 0,
+      "address": 0,
+      "bit": 9,
+      "name": "定速巡航",
+      "mode": 0,
+      "value": [
+        "ON",
+        "OFF"
+      ],
+      "now": 0
+    },
+    {
+      "no": 1,
+      "address": 0,
+      "bit": 6,
+      "name": "公制英制",
+      "mode": 1,
+      "value": [
+        "Metric",
+        "Imperia"
+      ],
+      "now": 0
+    },
+    {
+      "no": 2,
+      "address": 0,
+      "bit": 5,
+      "name": "零起步",
+      "mode": 0,
+      "value": [
+        "ON",
+        "OFF"
+      ],
+      "now": 0
+    },
+    {
+      "no": 3,
+      "address": 2,
+      "name": "最大调制度",
+      "mode": 2,
+      "min": 1,
+      "max": 50,
+      "step": 1,
+      "real": 21845,
+      "now": 1
+    },
+    {
+      "no": 4,
+      "address": 4,
+      "name": "电机极对数",
+      "mode": 4,
+      "min": 1,
+      "max": 30,
+      "step": 1,
+      "now": 1
+    },
+    {
+      "no": 5,
+      "address": 9,
+      "name": "油门加速响应",
+      "mode": 2,
+      "min": 0,
+      "max": 10,
+      "step": 1,
+      "real": 30000,
+      "now": 0
+    },
+    {
+      "no": 6,
+      "address": 10,
+      "name": "油门刹车响应",
+      "mode": 2,
+      "min": 0,
+      "max": 10,
+      "step": 1,
+      "real": 30000,
+      "now": 0
+    },
+    {
+      "no": 7,
+      "address": 11,
+      "name": "最大放电电流",
+      "mode": 3,
+      "min": 0.5,
+      "max": 20,
+      "step": 0.5,
+      "opv": 64,
+      "unit": "A",
+      "now": 0
+    },
+    {
+      "no": 8,
+      "address": 12,
+      "name": "最大刹车电流",
+      "mode": 3,
+      "min": 0.5,
+      "max": 30,
+      "step": 0.5,
+      "opv": 64,
+      "unit": "A",
+      "now": 0
+    },
+    {
+      "no": 9,
+      "address": 19,
+      "name": "电池低压保护阀值",
+      "mode": 3,
+      "min": 18,
+      "max": 44,
+      "step": 0.5,
+      "opv": 10,
+      "unit": "V",
+      "now": 0
+    },
+    {
+      "no": 10,
+      "address": 32,
+      "name": "限速值",
+      "mode": 3,
+      "min": 0,
+      "max": 60,
+      "step": 1,
+      "opv": 10,
+      "unit": "KPH",
+      "now": 0
+    },
+    {
+      "no": 11,
+      "address": 23,
+      "name": "电机直径",
+      "mode": 5,
+      "min": 0.5,
+      "max": 15,
+      "step": 0.5,
+      "opv": 25.4,
+      "unit": "inch",
+      "now": 0
+    },
+    {
+      "no": 12,
+      "address": 33,
+      "name": "载波频率",
+      "mode": 6,
+      "value": [
+        "8K",
+        "10K",
+        "12K",
+        "15K",
+        "AUTO"
+      ],
+      "now": 0,
+      "unit": ""
+    },
+    {
+      "no": 13,
+      "address": 51,
+      "name": "定速巡航激活时间",
+      "mode": 4,
+      "min": 2,
+      "max": 30,
+      "step": 1,
+      "now": 8,
+      "unit": "Second"
+    },
+    {
+      "no": 14,
+      "address": 52,
+      "name": "自动关机时间",
+      "mode": 4,
+      "min": 2,
+      "max": 30,
+      "step": 1,
+      "now": 8,
+      "unit": "Minute"
+    },
+    {
+      "no": 15,
+      "address": 73,
+      "name": "售后服务里程",
+      "mode": 7,
+      "min": 0,
+      "max": 65535,
+      "step": 1,
+      "now": 300,
+      "unit": "km"
+    },
+    {
+      "no": 16,
+      "address": 74,
+      "name": "最后一次保养时里程H",
+      "mode": 7,
+      "min": 0,
+      "max": 65535,
+      "step": 1,
+      "now": 0,
+      "unit": "km"
+    },
+    {
+      "no": 17,
+      "address": 75,
+      "name": "最后一次保养时里程L",
+      "mode": 7,
+      "min": 0,
+      "max": 65535,
+      "step": 1,
+      "now": 0,
+      "unit": "km"
+    }
+  ]
+}
