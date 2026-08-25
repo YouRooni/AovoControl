@@ -21,6 +21,10 @@ on:
         required: false
         type: boolean
         default: false
+  push:
+    tags:
+      - 'v*'
+      - '[0-9]*'
 
 permissions:
   contents: write
@@ -82,7 +86,11 @@ jobs:
           
           TAG="${{ github.event.inputs.tag_name }}"
           if [ -z "$TAG" ]; then
-            TAG="v$VERSION_NAME"
+            if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+              TAG="${{ github.ref_name }}"
+            else
+              TAG="v$VERSION_NAME"
+            fi
           fi
           echo "tag=$TAG" >> $GITHUB_OUTPUT
 
