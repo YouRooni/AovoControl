@@ -166,14 +166,14 @@ fun AboutScreen(viewModel: AovoViewModel? = null, modifier: Modifier = Modifier)
                 if (viewModel != null) {
                     Spacer(Modifier.width(8.dp))
                     Surface(
+                        onClick = {
+                            haptics?.perform(Haptic.Press)
+                            viewModel.checkForUpdates(isManual = true)
+                        },
+                        enabled = updateState !is UpdateState.Checking,
                         shape = CircleShape,
                         color = MaterialTheme.colorScheme.surfaceVariant,
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clickable(enabled = updateState !is UpdateState.Checking) {
-                                haptics?.perform(Haptic.Press)
-                                viewModel.checkForUpdates(isManual = true)
-                            },
+                        modifier = Modifier.size(32.dp),
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             if (updateState is UpdateState.Checking) {
