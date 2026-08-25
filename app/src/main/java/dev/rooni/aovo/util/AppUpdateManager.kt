@@ -1,5 +1,6 @@
 package dev.rooni.aovo.util
 
+import android.util.Log
 import dev.rooni.aovo.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -69,6 +70,7 @@ object AppUpdateManager {
                 Result.success(null)
             }
         } catch (e: Exception) {
+            Log.e("AppUpdateManager", "Failed to check GitHub releases", e)
             Result.failure(e)
         }
     }
