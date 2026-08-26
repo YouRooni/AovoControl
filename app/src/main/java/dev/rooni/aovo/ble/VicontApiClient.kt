@@ -33,7 +33,7 @@ object VicontApiClient {
         data class Error(val error: String) : CheckResult()
     }
 
-        private suspend fun fetchGuestToken(): String? = withContext(Dispatchers.IO) {
+    private suspend fun fetchGuestToken(): String? = withContext(Dispatchers.IO) {
         try {
             val url = URL("$BASE_URL/login?grant_type=app")
             val conn = (url.openConnection() as HttpURLConnection).apply {
@@ -69,7 +69,7 @@ object VicontApiClient {
         }
     }
 
-        private suspend fun resolveDevice(token: String, code: String): JSONObject? = withContext(Dispatchers.IO) {
+    private suspend fun resolveDevice(token: String, code: String): JSONObject? = withContext(Dispatchers.IO) {
         try {
             val encoded = URLEncoder.encode(code, "UTF-8")
             val url = URL("$BASE_URL/api/device/user/inner/info?code=$encoded")
@@ -93,19 +93,32 @@ object VicontApiClient {
         }
     }
 
-        suspend fun checkForUpdates(
+    suspend fun checkForUpdates(
         scooterCode: String,
         typeCode: String = "AD102030",
     ): CheckResult = withContext(Dispatchers.IO) {
         if (scooterCode.isBlank()) {
-            return@withContext CheckResult.NotFound("Scooter name or serial code is empty")
+            return@withContext CheckResult.NotFound("Имя или серийный номер самоката пуст")
         }
 
         val token = fetchGuestToken()
-            ?: return@withContext CheckResult.Error("Could not authenticate with Vicont server")
+            ?: return@withContext CheckResult.Error("Не удалось авторизоваться на сервере ViCont")
 
-        val device = resolveDevice(token, scooterCode)
-            ?: return@withContext CheckResult.NotFound("Device '$scooterCode' not found in server database")
+        val candidateCodes = listOfNotNull(
+            scooterCode,
+            scooterCode.substringBefore("-").takeIf { it.isNotBlank() && it != scooterCode },
+            scooterCode.substringBefore("_").takeIf { it.isNotBlank() && it != scooterCode }
+        ).distinct()
+
+        var device: JSONObject? = null
+        for (code in candidateCodes) {
+            device = resolveDevice(token, code)
+            if (device != null) break
+        }
+
+        if (device == null) {
+            return@withContext CheckResult.NotFound("Устройство '$scooterCode' не найдено в базе сервера ViCont")
+        }
 
         val deviceId = device.optString("deviceId").ifBlank { device.optString("id") }
         val devName = device.optString("deviceName", scooterCode)
@@ -113,7 +126,7 @@ object VicontApiClient {
         val modelName = device.optString("modelName", "Unknown")
 
         if (deviceId.isBlank()) {
-            return@withContext CheckResult.NotFound("Server did not return a valid deviceId")
+            return@withContext CheckResult.NotFound("Сервер не вернул идентификатор устройства")
         }
 
         try {
@@ -129,13 +142,13 @@ object VicontApiClient {
             }
 
             if (conn.responseCode != 200) {
-                return@withContext CheckResult.Error("Server returned HTTP ${conn.responseCode}")
+                return@withContext CheckResult.Error("Сервер вернул HTTP ${conn.responseCode}")
             }
 
             val text = conn.inputStream.bufferedReader().use { it.readText() }
             val json = JSONObject(text)
             if (json.optInt("code") != 0) {
-                return@withContext CheckResult.NotFound(json.optString("msg", "No firmware info"))
+                return@withContext CheckResult.NotFound(json.optString("msg", "Нет данных о прошивке"))
             }
 
             val data = json.optJSONObject("data")
@@ -164,11 +177,11 @@ object VicontApiClient {
             )
         } catch (e: Exception) {
             Log.e(TAG, "Firmware check failed", e)
-            CheckResult.Error(e.localizedMessage ?: "Connection error")
+            CheckResult.Error(e.localizedMessage ?: "Ошибка подключения")
         }
     }
 
-        suspend fun downloadFirmwareBytes(fileUrl: String): ByteArray? = withContext(Dispatchers.IO) {
+    suspend fun downloadFirmwareBytes(fileUrl: String): ByteArray? = withContext(Dispatchers.IO) {
         try {
             val url = URL(fileUrl)
             val conn = (url.openConnection() as HttpURLConnection).apply {
