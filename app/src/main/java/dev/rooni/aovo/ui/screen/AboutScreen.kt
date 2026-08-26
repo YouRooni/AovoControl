@@ -328,6 +328,7 @@ fun AboutScreen(viewModel: AovoViewModel? = null, modifier: Modifier = Modifier)
                     )
                 }
             }
+            Spacer(Modifier.navigationBarsPadding())
         }
 
         // Easter Egg Fireworks & Confetti Overlay

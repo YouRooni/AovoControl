@@ -7,22 +7,13 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.automirrored.filled.DirectionsBike
@@ -127,8 +118,6 @@ fun RideSettingsScreen(viewModel: AovoViewModel, modifier: Modifier = Modifier) 
                     onCheckedChange = core::setHeadLight,
                 )
             }
-            // On ViCont the strip has five modes and a colour, which the stock app hides
-            // behind an unreachable page; a plain on/off switch throws all of that away.
             if (family == ScooterFamily.VICONT) {
                 tile { shape ->
                     SettingRow(
@@ -140,17 +129,14 @@ fun RideSettingsScreen(viewModel: AovoViewModel, modifier: Modifier = Modifier) 
                         onClick = { choice = Choice.AmbientMode },
                     )
                 }
-                // A colour is only worth choosing for the two modes that hold one.
-                if (lampMode == 3 || lampMode == 4) {
-                    tile { shape ->
-                        ColourRow(
-                            shape = shape,
-                            selected = lampHue,
-                            enabled = connected,
-                        ) { hue ->
-                            lampHue = hue
-                            core.setAmbienceLamp(lampMode + 1, hue)
-                        }
+                tileIf(lampMode == 3 || lampMode == 4) { shape ->
+                    ColourRow(
+                        shape = shape,
+                        selected = lampHue,
+                        enabled = connected,
+                    ) { hue ->
+                        lampHue = hue
+                        core.setAmbienceLamp(lampMode + 1, hue)
                     }
                 }
             } else {
@@ -240,7 +226,6 @@ fun RideSettingsScreen(viewModel: AovoViewModel, modifier: Modifier = Modifier) 
                     enabled = connected && !movingLock,
                 ) { core.setGearLimit(5, it) }
             }
-            // slider there would just be a control that does nothing.
             tileIf(family != ScooterFamily.VICONT) { shape ->
                 LimitSlider(
                     shape = shape,
@@ -250,6 +235,7 @@ fun RideSettingsScreen(viewModel: AovoViewModel, modifier: Modifier = Modifier) 
                 ) { core.setModeLimits(it, ride.limitEco, ride.limitComfort, ride.limitSport) }
             }
         }
+        Spacer(Modifier.navigationBarsPadding())
     }
 
     if (choice == Choice.AmbientMode) {

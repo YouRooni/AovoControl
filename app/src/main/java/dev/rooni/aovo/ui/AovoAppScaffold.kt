@@ -74,6 +74,7 @@ fun AovoAppScaffold(viewModel: AovoViewModel) {
 
     Scaffold(
         modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             val isScrolled = appBarState.contentOffset < -1f
             val shadowElevation by animateDpAsState(
