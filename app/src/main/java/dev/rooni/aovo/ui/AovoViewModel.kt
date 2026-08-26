@@ -489,4 +489,22 @@ class AovoViewModel : ViewModel() {
             prefs.setBackgroundService(enabled)
         }
     }
+
+    // ---- ride analytics -----------------------------------------------------------------
+
+    val rideHistory = app.rideRepository.rides
+    val rideStats = app.rideRepository.stats
+    val isRideRecording = app.rideTracker.isRecording
+
+    fun deleteRide(id: Long) = viewModelScope.launch {
+        app.rideRepository.deleteRide(id)
+    }
+
+    fun clearRideHistory() = viewModelScope.launch {
+        app.rideRepository.clearHistory()
+    }
+
+    suspend fun getRideDetails(id: Long): dev.rooni.aovo.ride.RideSession? {
+        return app.rideRepository.getRideDetails(id)
+    }
 }
