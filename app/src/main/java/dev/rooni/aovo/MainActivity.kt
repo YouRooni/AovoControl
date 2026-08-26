@@ -97,11 +97,17 @@ private fun AutoConnect(viewModel: AovoViewModel) {
 private fun PermissionGate(content: @Composable () -> Unit) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val required = remember {
+        val list = mutableListOf<String>()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            arrayOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT)
+            list.add(Manifest.permission.BLUETOOTH_SCAN)
+            list.add(Manifest.permission.BLUETOOTH_CONNECT)
         } else {
-            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
+            list.add(Manifest.permission.ACCESS_FINE_LOCATION)
         }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            list.add(Manifest.permission.POST_NOTIFICATIONS)
+        }
+        list.toTypedArray()
     }
 
     fun allGranted() = required.all {

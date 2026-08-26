@@ -32,6 +32,7 @@ data class AppSettings(
     val dashboard: DashboardLayout = DashboardLayout.Default,
     val profiles: List<RideProfile> = emptyList(),
     val gaugeStyle: GaugeStyle = GaugeStyle.CLASSIC,
+    val backgroundService: Boolean = true,
     val ignoredUpdateVersion: String = "",
 )
 
@@ -56,6 +57,7 @@ class Prefs(private val context: Context) {
         dashboard = DashboardLayout.decode(this[KEY_DASHBOARD]),
         profiles = RideProfile.decode(this[KEY_PROFILES]),
         gaugeStyle = GaugeStyle.entries.getOrElse(this[KEY_GAUGE_STYLE] ?: 0) { GaugeStyle.CLASSIC },
+        backgroundService = this[KEY_BACKGROUND_SERVICE] ?: true,
         ignoredUpdateVersion = this[KEY_IGNORED_UPDATE].orEmpty(),
     )
 
@@ -69,6 +71,7 @@ class Prefs(private val context: Context) {
     suspend fun setHaptics(enabled: Boolean) = edit { it[KEY_HAPTICS] = enabled }
     suspend fun setLogging(enabled: Boolean) = edit { it[KEY_LOGGING] = enabled }
     suspend fun setGaugeStyle(style: GaugeStyle) = edit { it[KEY_GAUGE_STYLE] = style.ordinal }
+    suspend fun setBackgroundService(enabled: Boolean) = edit { it[KEY_BACKGROUND_SERVICE] = enabled }
 
     suspend fun rememberViContLimits(address: String, limits: List<Int>) = edit {
         it[KEY_VICONT_LIMITS] = (listOf(address) + limits).joinToString("|")
@@ -119,6 +122,7 @@ class Prefs(private val context: Context) {
         val KEY_DASHBOARD = stringPreferencesKey("dashboard_layout")
         val KEY_PROFILES = stringPreferencesKey("ride_profiles")
         val KEY_GAUGE_STYLE = intPreferencesKey("gauge_style")
+        val KEY_BACKGROUND_SERVICE = booleanPreferencesKey("background_service")
         val KEY_IGNORED_UPDATE = stringPreferencesKey("ignored_update_version")
     }
 }

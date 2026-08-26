@@ -46,6 +46,7 @@ import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material.icons.filled.Science
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material.icons.filled.Notifications
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material.icons.filled.BugReport
@@ -245,6 +246,16 @@ fun SettingsScreen(
                     icon = Icons.Filled.Sync,
                     checked = settings.autoConnect,
                     onCheckedChange = { viewModel.setAutoConnect(it) },
+                )
+            }
+            tile { shape ->
+                SwitchRow(
+                    shape = shape,
+                    title = stringResource(R.string.background_service),
+                    subtitle = stringResource(R.string.background_service_desc),
+                    icon = Icons.Filled.Notifications,
+                    checked = settings.backgroundService,
+                    onCheckedChange = { viewModel.setBackgroundService(it) },
                 )
             }
             tile { shape ->

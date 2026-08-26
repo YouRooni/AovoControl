@@ -157,6 +157,10 @@
     <string name="behaviour">Поведение</string>
     <string name="auto_connect">Подключаться автоматически</string>
     <string name="auto_connect_desc">Постоянно искать и подключать последний самокат, когда приложение открыто</string>
+    <string name="background_service">Работа в фоне</string>
+    <string name="background_service_desc">Держать связь при свёрнутом приложении и показывать статус в шторке</string>
+    <string name="scooter_service_channel_name">Статус самоката в шторке</string>
+    <string name="scooter_service_channel_desc">Показывает скорость, заряд и быстрые кнопки во время поездки</string>
     <string name="keep_screen_on">Не гасить экран</string>
     <string name="keep_screen_on_desc">Пока открыта панель</string>
     <string name="expert_mode">Режим эксперта</string>

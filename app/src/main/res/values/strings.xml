@@ -171,6 +171,10 @@
     <string name="behaviour">Behaviour</string>
     <string name="auto_connect">Auto-connect</string>
     <string name="auto_connect_desc">Continuously scan and connect to last scooter while app is open</string>
+    <string name="background_service">Background connection</string>
+    <string name="background_service_desc">Keep connected while app is minimized and show live status in notification shade</string>
+    <string name="scooter_service_channel_name">Scooter Live Status</string>
+    <string name="scooter_service_channel_desc">Shows speed, battery and quick controls while connected</string>
     <string name="keep_screen_on">Keep screen on</string>
     <string name="keep_screen_on_desc">While the dashboard is visible</string>
     <string name="expert_mode">Expert mode</string>

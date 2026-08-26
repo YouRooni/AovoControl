@@ -117,6 +117,16 @@ class AovoViewModel : ViewModel() {
                 core.setAutoReconnect(target, current.lastDevicePassword)
             }
         }
+
+        viewModelScope.launch {
+            combine(core.connection, settings) { connection, currentSettings ->
+                if (currentSettings.backgroundService && (connection == ConnectionState.CONNECTED || connection == ConnectionState.CONNECTING)) {
+                    dev.rooni.aovo.service.ScooterService.start(app)
+                } else if (!currentSettings.backgroundService || connection == ConnectionState.DISCONNECTED || connection == ConnectionState.IDLE) {
+                    dev.rooni.aovo.service.ScooterService.stop(app)
+                }
+            }.collect {}
+        }
         checkForUpdates(isManual = false)
     }
 
@@ -471,6 +481,12 @@ class AovoViewModel : ViewModel() {
     fun setGaugeStyle(style: GaugeStyle) {
         viewModelScope.launch {
             prefs.setGaugeStyle(style)
+        }
+    }
+
+    fun setBackgroundService(enabled: Boolean) {
+        viewModelScope.launch {
+            prefs.setBackgroundService(enabled)
         }
     }
 }
