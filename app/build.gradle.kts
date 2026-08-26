@@ -11,8 +11,8 @@ android {
         applicationId = "dev.rooni.aovo"
         minSdk = 26
         targetSdk = 36
-        versionCode = 4
-        versionName = "1.0.1"
+        versionCode = 5
+        versionName = "1.0.2"
         ndk {
             abiFilters += listOf("arm64-v8a", "armeabi-v7a")
         }

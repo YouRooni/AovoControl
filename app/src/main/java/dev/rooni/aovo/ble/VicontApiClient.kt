@@ -45,6 +45,7 @@ object VicontApiClient {
                 setRequestProperty("Accept-Language", "zh-Hans")
                 setRequestProperty("Accept-Platform", "android")
                 setRequestProperty("User-Agent", "Mozilla/5.0")
+                setRequestProperty("Authorization", "Basic YXBwOmFwcF9zZWNyZXQ=")
             }
 
             val body = JSONObject().put("loginType", "TEMPORARY_USER").toString()
