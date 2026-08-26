@@ -196,7 +196,7 @@
     <string name="overwrite">Обновить из текущих настроек</string>
     <string name="apply_profile">Применить</string>
     <string name="delete_profile_confirm">Удалить профиль? Плитки, ссылающиеся на него, тоже пропадут.</string>
-    <string name="edit_dashboard">Редактировать панель</string>
+    <string name="edit_dashboard">Редактор панели</string>
     <string name="done">Готово</string>
     <string name="add_tile">Добавить плитку</string>
     <string name="reset_dashboard">Сбросить панель</string>

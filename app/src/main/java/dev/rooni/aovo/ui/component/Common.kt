@@ -207,7 +207,7 @@ fun ActionTile(
     val haptics = LocalHaptics.current
 
     Surface(
-        shape = actionTileShape(selected),
+        shape = if (interactive) actionTileShape(selected) else shape,
         color = container,
         modifier = modifier
             .fillMaxWidth()

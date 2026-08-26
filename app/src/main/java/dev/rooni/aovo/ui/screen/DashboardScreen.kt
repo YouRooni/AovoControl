@@ -21,16 +21,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -46,8 +37,11 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.OpenInFull
 import androidx.compose.material.icons.filled.RestartAlt
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
@@ -71,6 +65,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
@@ -348,14 +343,6 @@ private fun EditableTile(
     onSetHeight: (String, Int) -> Unit,
     onRemove: (String) -> Unit,
 ) {
-    // Action tiles carry their state in their corners, so the editing outline has to follow
-    // the same shape or it would sit proud of the tile it is outlining.
-    val outlineShape = if (tile.type.isActionTile()) {
-        actionTileShape(tileIsActive(tile, context))
-    } else {
-        shape
-    }
-
     Box {
         DashboardTileContent(tile, shape, context)
 
@@ -366,7 +353,7 @@ private fun EditableTile(
                         .matchParentSize()
                         .background(
                             MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.65f),
-                            outlineShape,
+                            shape,
                         ),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -381,11 +368,11 @@ private fun EditableTile(
             Box(
                 modifier = Modifier
                     .matchParentSize()
-                    .border(2.dp, MaterialTheme.colorScheme.primary, outlineShape)
+                    .border(2.dp, MaterialTheme.colorScheme.primary, shape)
             )
 
             RemoveChip(
-                modifier = Modifier.align(Alignment.TopEnd).padding(6.dp),
+                modifier = Modifier.align(Alignment.TopStart).padding(6.dp),
                 onClick = { onRemove(tile.id) },
             )
 
@@ -462,17 +449,58 @@ private fun ResizeHandleBar(
     var startSpan by remember(tile.id) { mutableIntStateOf(tile.clampedSpan()) }
     var startHeight by remember(tile.id) { mutableIntStateOf(tile.clampedHeight()) }
     var startColumnPx by remember(tile.id) { mutableFloatStateOf(0f) }
-    var total by remember(tile.id) { mutableStateOf(Offset.Zero) }
+    var totalOffset by remember(tile.id) { mutableStateOf(Offset.Zero) }
+    var isDragging by remember { mutableStateOf(false) }
+
+    val maxRubberBandPx = with(density) { 14.dp.toPx() }
+    val targetOffsetX = if (horizontal && isDragging) {
+        (totalOffset.x * 0.18f).coerceIn(-maxRubberBandPx, maxRubberBandPx)
+    } else 0f
+    val targetOffsetY = if (vertical && isDragging) {
+        (totalOffset.y * 0.18f).coerceIn(-maxRubberBandPx, maxRubberBandPx)
+    } else 0f
+
+    val animOffsetX by animateFloatAsState(
+        targetValue = targetOffsetX,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium,
+        ),
+        label = "handleOffsetX"
+    )
+    val animOffsetY by animateFloatAsState(
+        targetValue = targetOffsetY,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium,
+        ),
+        label = "handleOffsetY"
+    )
+
+    val handleScale by animateFloatAsState(
+        targetValue = if (isDragging) 1.25f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMediumLow,
+        ),
+        label = "handleScale"
+    )
 
     Box(
         modifier = modifier
+            .graphicsLayer {
+                translationX = animOffsetX
+                translationY = animOffsetY
+                scaleX = handleScale
+                scaleY = handleScale
+            }
             .pointerInput(tile.id, horizontal, vertical) {
                 detectDragGestures(
                     onDragStart = {
+                        isDragging = true
                         startSpan = current.clampedSpan()
                         startHeight = current.clampedHeight()
-                        total = Offset.Zero
-                        // Width of one column, worked back out of the tile we are attached to.
+                        totalOffset = Offset.Zero
                         val width = currentSize.width.toFloat()
                         startColumnPx = if (startSpan > 0 && width > 0f) {
                             (width - gapPx * (startSpan - 1)) / startSpan
@@ -480,26 +508,32 @@ private fun ResizeHandleBar(
                             0f
                         }
                     },
-                    onDragEnd = { total = Offset.Zero },
-                    onDragCancel = { total = Offset.Zero },
+                    onDragEnd = {
+                        isDragging = false
+                        totalOffset = Offset.Zero
+                    },
+                    onDragCancel = {
+                        isDragging = false
+                        totalOffset = Offset.Zero
+                    },
                 ) { change, delta ->
                     change.consume()
-                    total += delta
+                    totalOffset += delta
 
                     if (horizontal && startColumnPx > 0f) {
                         val stride = startColumnPx + gapPx
-                        val wanted = startSpan + Math.round(total.x / stride)
-                        val snapped = current.copy(
-                            span = wanted.coerceIn(1, DashboardLayout.COLUMNS)
-                        ).clampedSpan()
-                        if (snapped != current.clampedSpan()) {
-                            onResize(current.id, snapped)
+                        val rawWanted = (startSpan + Math.round(totalOffset.x / stride))
+                            .coerceIn(1, DashboardLayout.COLUMNS)
+                        val allowed = current.type.allowedSpans
+                        val best = allowed.minByOrNull { kotlin.math.abs(it - rawWanted) } ?: startSpan
+                        if (best != current.clampedSpan()) {
+                            onResize(current.id, best)
                             haptics?.perform(Haptic.Tick)
                         }
                     }
 
                     if (vertical) {
-                        val wanted = (startHeight + Math.round(total.y / heightStepPx))
+                        val wanted = (startHeight + Math.round(totalOffset.y / heightStepPx))
                             .coerceIn(TileHeights.minFor(current.type), TileHeights.MAX)
                         if (wanted != current.clampedHeight()) {
                             onSetHeight(current.id, wanted)
@@ -535,37 +569,27 @@ private fun EditToolbar(onAdd: () -> Unit, onReset: () -> Unit, onDone: () -> Un
         shadowElevation = 4.dp,
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                Text(
-                    text = stringResource(R.string.edit_dashboard),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.weight(1f).padding(start = 4.dp),
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            IconButton(onClick = onReset) {
+                Icon(
+                    imageVector = Icons.Filled.RestartAlt,
+                    contentDescription = stringResource(R.string.reset_dashboard),
                 )
-                TextButton(onClick = onReset) {
-                    Icon(
-                        Icons.Filled.RestartAlt,
-                        stringResource(R.string.reset_dashboard),
-                        modifier = Modifier.size(18.dp),
-                    )
-                }
-                TextButton(onClick = onAdd) {
-                    Icon(Icons.Filled.Add, null, modifier = Modifier.size(20.dp))
-                    Text(" " + stringResource(R.string.add_tile))
-                }
-                TextButton(onClick = onDone) { Text(stringResource(R.string.done)) }
             }
-            Text(
-                text = stringResource(R.string.edit_dashboard_hint),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 4.dp, bottom = 2.dp, end = 4.dp),
-            )
+            Spacer(Modifier.weight(1f))
+            FilledTonalButton(onClick = onAdd) {
+                Icon(Icons.Filled.Add, null, modifier = Modifier.size(20.dp))
+                Text(" " + stringResource(R.string.add_tile))
+            }
+            Button(onClick = onDone) {
+                Text(stringResource(R.string.done))
+            }
         }
     }
 }

@@ -72,6 +72,8 @@ fun AovoAppScaffold(viewModel: AovoViewModel) {
     val appBarState = rememberTopAppBarState()
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(appBarState)
 
+    val editingDashboard by viewModel.editingDashboard.collectAsStateWithLifecycle()
+
     Scaffold(
         modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -94,7 +96,7 @@ fun AovoAppScaffold(viewModel: AovoViewModel) {
                     ),
                     title = {
                         AnimatedContent(
-                            targetState = route,
+                            targetState = if (route == Routes.DASHBOARD && editingDashboard) "dashboard_editing" else route,
                             transitionSpec = {
                                 val forward = travelOrder(targetState) >= travelOrder(initialState)
                                 val slideDirection = if (forward) 1 else -1
@@ -110,9 +112,12 @@ fun AovoAppScaffold(viewModel: AovoViewModel) {
                                     ).using(SizeTransform(clip = false))
                             },
                             label = "topBarTitle",
-                        ) { currentRoute ->
+                        ) { currentRouteKey ->
                             Text(
-                                text = stringResource(titleFor(currentRoute)),
+                                text = stringResource(
+                                    if (currentRouteKey == "dashboard_editing") R.string.edit_dashboard
+                                    else titleFor(currentRouteKey)
+                                ),
                                 fontWeight = FontWeight.SemiBold,
                                 maxLines = 1,
                                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
@@ -423,6 +428,7 @@ private fun androidx.navigation.NavHostController.switchTo(route: String) {
 
 private fun travelOrder(route: String?): Int = when (route) {
     Routes.DASHBOARD -> 0
+    "dashboard_editing" -> 1
     Routes.DATA -> 10
     Routes.SETTINGS -> 20
     Routes.RIDE -> 30
