@@ -91,7 +91,7 @@ It communicates **directly via Bluetooth Low Energy (BLE)** without forced login
 
 * **Developer:** Danil ([@YouRooni](https://t.me/YouRooni))
 * **4PDA Community:** [Aovo Control](https://4pda.to/forum/index.php?showtopic=1125489)
-* **Protocol Research:** [@vova7878](https://t.me/vova7878) — for ViCont protocol reverse-engineering
+* **Protocol Research:** [vova7878 (Vladimir)](https://github.com/vova7878) — for ViCont protocol reverse-engineering
 * **Donate & Support:** [payRooni.t.me](https://t.me/payRooni) 💖
 
 ---

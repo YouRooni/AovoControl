@@ -61,7 +61,7 @@ private const val CHANNEL_URL = "https://t.me/RnPlugins"
 private const val DONATE_URL = "https://t.me/payRooni"
 private const val GITHUB_URL = "https://github.com/YouRooni/AovoControl"
 private const val FORUM_URL = "https://4pda.to/forum/index.php?showtopic=1125489"
-private const val CONTRIBUTOR_URL = "https://t.me/vova7878"
+private const val CONTRIBUTOR_URL = "https://github.com/vova7878"
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable

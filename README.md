@@ -92,7 +92,7 @@
 
 * **Разработчик:** Данил ([@YouRooni](https://t.me/YouRooni))
 * **Тема на 4PDA:** [Aovo Control](https://4pda.to/forum/index.php?showtopic=1125489)
-* **Исследование протокола:** [@vova7878](https://t.me/vova7878) — за документацию и реверс протокола ViCont
+* **Исследование протокола:** [vova7878 (Vladimir)](https://github.com/vova7878) — за документацию и реверс протокола ViCont
 * **Поддержка проекта:** [payRooni.t.me](https://t.me/payRooni) 💖
 
 ---
