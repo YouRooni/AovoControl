@@ -446,4 +446,24 @@
     <string name="update_check_failed">Ошибка проверки обновлений</string>
     <string name="update_check_failed_desc">Не удалось связаться с сервером GitHub. Проверьте подключение к сети.</string>
     <string name="great">Отлично</string>
+
+    <string name="rides_title">Поездки и аналитика</string>
+    <string name="ride_details_title">Детали поездки</string>
+    <string name="no_rides">Поездок пока нет. Начните движение, и поездки будут сохраняться автоматически.</string>
+    <string name="recording_ride">Идёт запись поездки…</string>
+    <string name="today">Сегодня</string>
+    <string name="yesterday">Вчера</string>
+    <string name="clear_history">Очистить историю</string>
+    <string name="clear_history_confirm">Удалить всю историю поездок?</string>
+    <string name="delete_ride_confirm">Удалить запись об этой поездке?</string>
+    <string name="chart_speed">Скорость</string>
+    <string name="chart_power">Мощность и ток</string>
+    <string name="chart_voltage">Вольтаж</string>
+    <string name="chart_temp">Температура</string>
+    <string name="stat_total_distance">Общий пробег</string>
+    <string name="stat_total_time">Время в пути</string>
+    <string name="stat_top_speed">Рекорд скорости</string>
+    <string name="stat_top_power">Пик мощности</string>
+    <string name="stat_avg_speed">Ср. скорость</string>
+    <string name="stat_battery_used">Расход батареи</string>
 </resources>

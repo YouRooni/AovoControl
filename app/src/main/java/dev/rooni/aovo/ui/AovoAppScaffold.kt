@@ -38,6 +38,8 @@ object Routes {
     const val DASHBOARD = "dashboard"
     const val DATA = "data"
     const val SETTINGS = "settings"
+    const val RIDES = "rides"
+    const val RIDE_DETAILS = "ride_details/{rideId}"
     const val RIDE = "ride"
     const val CONTROLLER = "controller"
     const val FIRMWARE = "firmware"
@@ -151,6 +153,30 @@ fun AovoAppScaffold(viewModel: AovoViewModel) {
                         }
                     },
                     actions = {
+                        AnimatedVisibility(
+                            visible = route == Routes.DATA,
+                            enter = fadeIn(tween(240)) + expandHorizontally(
+                                animationSpec = tween(240, easing = FastOutSlowInEasing),
+                                expandFrom = Alignment.End,
+                            ) + scaleIn(
+                                animationSpec = tween(240, easing = FastOutSlowInEasing),
+                                initialScale = 0.8f,
+                            ),
+                            exit = fadeOut(tween(180)) + shrinkHorizontally(
+                                animationSpec = tween(180, easing = FastOutSlowInEasing),
+                                shrinkTowards = Alignment.End,
+                            ) + scaleOut(
+                                animationSpec = tween(180, easing = FastOutSlowInEasing),
+                                targetScale = 0.8f,
+                            ),
+                        ) {
+                            IconButton(onClick = { navController.navigate(Routes.RIDES) }) {
+                                Icon(
+                                    imageVector = Icons.Filled.QueryStats,
+                                    contentDescription = stringResource(R.string.rides_title),
+                                )
+                            }
+                        }
                         AnimatedVisibility(
                             visible = route == Routes.SETTINGS,
                             enter = fadeIn(tween(240)) + expandHorizontally(
@@ -293,6 +319,16 @@ fun AovoAppScaffold(viewModel: AovoViewModel) {
                 )
             }
             composable(Routes.DATA) { DataScreen(viewModel) }
+            composable(Routes.RIDES) {
+                RidesScreen(
+                    viewModel = viewModel,
+                    onOpenRide = { id -> navController.navigate("ride_details/$id") },
+                )
+            }
+            composable(Routes.RIDE_DETAILS) { backStackEntry ->
+                val rideId = backStackEntry.arguments?.getString("rideId")?.toLongOrNull() ?: 0L
+                RideDetailsScreen(viewModel = viewModel, rideId = rideId)
+            }
             composable(Routes.SETTINGS) {
                 SettingsScreen(
                     viewModel = viewModel,
@@ -426,34 +462,38 @@ private fun androidx.navigation.NavHostController.switchTo(route: String) {
     }
 }
 
-private fun travelOrder(route: String?): Int = when (route) {
-    Routes.DASHBOARD -> 0
-    "dashboard_editing" -> 1
-    Routes.DATA -> 10
-    Routes.SETTINGS -> 20
-    Routes.RIDE -> 30
-    Routes.PROFILES -> 31
-    Routes.CONTROLLER -> 32
-    Routes.FIRMWARE -> 33
-    Routes.MODULE -> 34
-    Routes.ENGINEERING -> 35
-    Routes.ABOUT -> 40
-    null -> 0
+private fun travelOrder(route: String?): Int = when {
+    route == Routes.DASHBOARD -> 0
+    route == "dashboard_editing" -> 1
+    route == Routes.DATA -> 10
+    route == Routes.RIDES -> 15
+    route?.startsWith("ride_details") == true -> 16
+    route == Routes.SETTINGS -> 20
+    route == Routes.RIDE -> 30
+    route == Routes.PROFILES -> 31
+    route == Routes.CONTROLLER -> 32
+    route == Routes.FIRMWARE -> 33
+    route == Routes.MODULE -> 34
+    route == Routes.ENGINEERING -> 35
+    route == Routes.ABOUT -> 40
+    route == null -> 0
     else -> 100
 }
 
 private fun travelsForward(from: NavBackStackEntry, to: NavBackStackEntry): Boolean =
     travelOrder(to.destination.route) >= travelOrder(from.destination.route)
 
-private fun titleFor(route: String): Int = when (route) {
-    Routes.DATA -> R.string.nav_data
-    Routes.SETTINGS -> R.string.nav_settings
-    Routes.RIDE -> R.string.ride_settings
-    Routes.CONTROLLER -> R.string.controller_params
-    Routes.FIRMWARE -> R.string.firmware
-    Routes.MODULE -> R.string.module
-    Routes.ENGINEERING -> R.string.engineering_menu
-    Routes.PROFILES -> R.string.profiles
-    Routes.ABOUT -> R.string.about
+private fun titleFor(route: String): Int = when {
+    route == Routes.DATA -> R.string.nav_data
+    route == Routes.RIDES -> R.string.rides_title
+    route.startsWith("ride_details") -> R.string.ride_details_title
+    route == Routes.SETTINGS -> R.string.nav_settings
+    route == Routes.RIDE -> R.string.ride_settings
+    route == Routes.CONTROLLER -> R.string.controller_params
+    route == Routes.FIRMWARE -> R.string.firmware
+    route == Routes.MODULE -> R.string.module
+    route == Routes.ENGINEERING -> R.string.engineering_menu
+    route == Routes.PROFILES -> R.string.profiles
+    route == Routes.ABOUT -> R.string.about
     else -> R.string.app_name
 }

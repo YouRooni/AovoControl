@@ -458,4 +458,24 @@
     <string name="update_check_failed">Update check failed</string>
     <string name="update_check_failed_desc">Could not connect to GitHub. Please check your internet connection.</string>
     <string name="great">Great</string>
+
+    <string name="rides_title">Rides &amp; Analytics</string>
+    <string name="ride_details_title">Ride Details</string>
+    <string name="no_rides">No rides recorded yet. Start riding and trips will be tracked automatically.</string>
+    <string name="recording_ride">Recording ride in progress…</string>
+    <string name="today">Today</string>
+    <string name="yesterday">Yesterday</string>
+    <string name="clear_history">Clear all history</string>
+    <string name="clear_history_confirm">Delete all recorded ride history?</string>
+    <string name="delete_ride_confirm">Delete this ride record?</string>
+    <string name="chart_speed">Speed</string>
+    <string name="chart_power">Power &amp; Current</string>
+    <string name="chart_voltage">Voltage</string>
+    <string name="chart_temp">Temperature</string>
+    <string name="stat_total_distance">Total distance</string>
+    <string name="stat_total_time">Total time</string>
+    <string name="stat_top_speed">Top speed</string>
+    <string name="stat_top_power">Peak power</string>
+    <string name="stat_avg_speed">Avg speed</string>
+    <string name="stat_battery_used">Battery used</string>
 </resources>
