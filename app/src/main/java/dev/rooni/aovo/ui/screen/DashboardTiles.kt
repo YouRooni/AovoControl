@@ -73,6 +73,7 @@ import dev.rooni.aovo.ble.RideState
 import dev.rooni.aovo.ble.Telemetry
 import dev.rooni.aovo.ble.ViContDecoder
 import dev.rooni.aovo.data.DashboardTile
+import dev.rooni.aovo.data.GaugeStyle
 import dev.rooni.aovo.data.ProfileIcons
 import dev.rooni.aovo.data.RideProfile
 import dev.rooni.aovo.data.TileType
@@ -85,20 +86,17 @@ import dev.rooni.aovo.ui.component.SectionDefaults
 import dev.rooni.aovo.ui.component.SpeedGauge
 import dev.rooni.aovo.ui.component.TileMetrics
 
-/** Everything a tile needs to draw itself, gathered once per frame. */
 data class TileContext(
     val viewModel: AovoViewModel,
     val connection: ConnectionState,
     val telemetry: Telemetry,
     val ride: RideState,
     val deviceName: String,
-    /** Gears the connected scooter admits. Three on ZYD, up to seven on ViCont. */
     val gears: List<Int> = listOf(1, 2, 3),
-    /** Throttle and brake positions, on the scooters that report them. */
     val sensors: ViContDecoder.Sensors? = null,
     val onOpenDevices: () -> Unit,
-    /** While editing, tiles must not react to taps or the drag gesture never starts. */
     val editing: Boolean = false,
+    val gaugeStyle: GaugeStyle = GaugeStyle.CLASSIC,
 ) {
     val connected: Boolean get() = connection == ConnectionState.CONNECTED
 }
@@ -182,24 +180,22 @@ fun DashboardTileContent(
                 modifier = Modifier.fillMaxWidth().height(tile.resolvedHeight()),
             ) {
                 Box(
-                    modifier = Modifier.fillMaxSize().padding(vertical = 10.dp),
+                    modifier = Modifier.fillMaxSize().padding(6.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     SpeedGauge(
-                    speed = telemetry.speed,
-                    maxSpeed = maxOf(gearLimit, ride.limitSport, 25).toFloat(),
-                    battery = telemetry.battery,
-                    unit = speedUnit,
+                        speed = telemetry.speed,
+                        maxSpeed = maxOf(gearLimit, ride.limitSport, 25).toFloat(),
+                        battery = telemetry.battery,
+                        unit = speedUnit,
                         subtitle = if (context.connected) {
                             telemetry.battery.toString() + "% · " + telemetry.voltage + " V"
                         } else {
                             stringResource(R.string.disconnected)
                         },
                         active = context.connected,
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .aspectRatio(1f)
-                            .padding(horizontal = 12.dp),
+                        style = context.gaugeStyle,
+                        modifier = Modifier.fillMaxSize(),
                     )
                 }
             }

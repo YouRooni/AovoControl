@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.map
 private val Context.dataStore by preferencesDataStore(name = "aovo")
 
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
+enum class GaugeStyle { CLASSIC, EXPRESSIVE }
 
 data class AppSettings(
     val theme: ThemeMode = ThemeMode.SYSTEM,
@@ -24,12 +25,13 @@ data class AppSettings(
     val haptics: Boolean = true,
     val expertMode: Boolean = false,
     val logging: Boolean = false,
-        val viContLimits: String = "",
+    val viContLimits: String = "",
     val lastDeviceName: String = "",
     val lastDeviceAddress: String = "",
     val lastDevicePassword: String = "",
     val dashboard: DashboardLayout = DashboardLayout.Default,
     val profiles: List<RideProfile> = emptyList(),
+    val gaugeStyle: GaugeStyle = GaugeStyle.CLASSIC,
     val ignoredUpdateVersion: String = "",
 )
 
@@ -53,6 +55,7 @@ class Prefs(private val context: Context) {
         lastDevicePassword = this[KEY_PASSWORD].orEmpty(),
         dashboard = DashboardLayout.decode(this[KEY_DASHBOARD]),
         profiles = RideProfile.decode(this[KEY_PROFILES]),
+        gaugeStyle = GaugeStyle.entries.getOrElse(this[KEY_GAUGE_STYLE] ?: 0) { GaugeStyle.CLASSIC },
         ignoredUpdateVersion = this[KEY_IGNORED_UPDATE].orEmpty(),
     )
 
@@ -65,6 +68,7 @@ class Prefs(private val context: Context) {
     suspend fun setExpertMode(enabled: Boolean) = edit { it[KEY_EXPERT] = enabled }
     suspend fun setHaptics(enabled: Boolean) = edit { it[KEY_HAPTICS] = enabled }
     suspend fun setLogging(enabled: Boolean) = edit { it[KEY_LOGGING] = enabled }
+    suspend fun setGaugeStyle(style: GaugeStyle) = edit { it[KEY_GAUGE_STYLE] = style.ordinal }
 
     suspend fun rememberViContLimits(address: String, limits: List<Int>) = edit {
         it[KEY_VICONT_LIMITS] = (listOf(address) + limits).joinToString("|")
@@ -114,6 +118,7 @@ class Prefs(private val context: Context) {
         val KEY_PASSWORD = stringPreferencesKey("device_password")
         val KEY_DASHBOARD = stringPreferencesKey("dashboard_layout")
         val KEY_PROFILES = stringPreferencesKey("ride_profiles")
+        val KEY_GAUGE_STYLE = intPreferencesKey("gauge_style")
         val KEY_IGNORED_UPDATE = stringPreferencesKey("ignored_update_version")
     }
 }

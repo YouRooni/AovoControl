@@ -37,6 +37,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.OpenInFull
 import androidx.compose.material.icons.filled.RestartAlt
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
@@ -77,6 +78,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.rooni.aovo.R
 import dev.rooni.aovo.data.DashboardLayout
 import dev.rooni.aovo.data.DashboardTile
+import dev.rooni.aovo.data.GaugeStyle
 import dev.rooni.aovo.data.TileType
 import dev.rooni.aovo.ui.AovoViewModel
 import dev.rooni.aovo.ui.Haptic
@@ -110,6 +112,7 @@ fun DashboardScreen(
         sensors = sensors,
         onOpenDevices = onOpenDevices,
         editing = editing,
+        gaugeStyle = settings.gaugeStyle,
     )
 
     var showPicker by remember { mutableStateOf(false) }
@@ -343,6 +346,8 @@ private fun EditableTile(
     onSetHeight: (String, Int) -> Unit,
     onRemove: (String) -> Unit,
 ) {
+    var pickGaugeStyle by remember { mutableStateOf(false) }
+
     Box {
         DashboardTileContent(tile, shape, context)
 
@@ -376,6 +381,13 @@ private fun EditableTile(
                 onClick = { onRemove(tile.id) },
             )
 
+            if (tile.type == TileType.Gauge) {
+                GaugeSettingsChip(
+                    modifier = Modifier.align(Alignment.TopStart).padding(start = 6.dp, top = 38.dp),
+                    onClick = { pickGaugeStyle = true },
+                )
+            }
+
             if (tile.type.canResizeWidth) {
                 ResizeHandleBar(
                     modifier = Modifier.align(Alignment.CenterEnd).padding(end = 4.dp),
@@ -396,6 +408,24 @@ private fun EditableTile(
                     onSetHeight = onSetHeight,
                 )
             }
+        }
+    }
+
+    if (pickGaugeStyle) {
+        val styles = listOf(
+            stringResource(R.string.gauge_style_classic),
+            stringResource(R.string.gauge_style_expressive),
+        )
+        val selectedIndex = if (context.gaugeStyle == GaugeStyle.EXPRESSIVE) 1 else 0
+        ChoiceDialog(
+            title = stringResource(R.string.gauge_style),
+            options = styles,
+            selected = selectedIndex,
+            onDismiss = { pickGaugeStyle = false },
+        ) { index ->
+            val nextStyle = if (index == 1) GaugeStyle.EXPRESSIVE else GaugeStyle.CLASSIC
+            context.viewModel.setGaugeStyle(nextStyle)
+            pickGaugeStyle = false
         }
     }
 }
@@ -420,6 +450,32 @@ private fun RemoveChip(modifier: Modifier, onClick: () -> Unit) {
                 imageVector = Icons.Filled.Close,
                 contentDescription = stringResource(R.string.remove_tile),
                 tint = MaterialTheme.colorScheme.onErrorContainer,
+                modifier = Modifier.size(16.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun GaugeSettingsChip(modifier: Modifier, onClick: () -> Unit) {
+    val haptics = LocalHaptics.current
+    Surface(
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.primaryContainer,
+        shadowElevation = 3.dp,
+        modifier = modifier.size(28.dp),
+    ) {
+        Box(
+            modifier = Modifier.clickable {
+                haptics?.perform(Haptic.Press)
+                onClick()
+            },
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Tune,
+                contentDescription = stringResource(R.string.gauge_style),
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
                 modifier = Modifier.size(16.dp),
             )
         }

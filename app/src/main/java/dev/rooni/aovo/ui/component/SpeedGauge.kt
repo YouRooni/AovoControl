@@ -2,37 +2,78 @@ package dev.rooni.aovo.ui.component
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BatteryAlert
+import androidx.compose.material.icons.filled.BatteryFull
+import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.rooni.aovo.data.GaugeStyle
 import kotlin.math.cos
 import kotlin.math.min
+import kotlin.math.roundToInt
 import kotlin.math.sin
+
+@Composable
+fun SpeedGauge(
+    speed: Float,
+    maxSpeed: Float,
+    battery: Int,
+    unit: String,
+    subtitle: String,
+    active: Boolean,
+    style: GaugeStyle = GaugeStyle.CLASSIC,
+    modifier: Modifier = Modifier,
+) {
+    if (style == GaugeStyle.EXPRESSIVE) {
+        ExpressiveSpeedGauge(
+            speed = speed,
+            maxSpeed = maxSpeed,
+            battery = battery,
+            unit = unit,
+            subtitle = subtitle,
+            active = active,
+            modifier = modifier,
+        )
+    } else {
+        ClassicSpeedGauge(
+            speed = speed,
+            maxSpeed = maxSpeed,
+            battery = battery,
+            unit = unit,
+            subtitle = subtitle,
+            active = active,
+            modifier = modifier,
+        )
+    }
+}
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun SpeedGauge(
+private fun ClassicSpeedGauge(
     speed: Float,
     maxSpeed: Float,
     battery: Int,
@@ -70,10 +111,6 @@ fun SpeedGauge(
         else -> MaterialTheme.colorScheme.primary
     }
 
-    // upper three quarters of the square it is drawn in. Centring that square would leave
-    // the dial looking like it had floated up, so the whole thing is nudged down by the
-    // amount the arc is off centre: the arc spans from -r to +r/2, whose midpoint is a
-    // quarter of a radius above the middle.
     Box(
         modifier = modifier
             .aspectRatio(1f)
@@ -112,7 +149,6 @@ fun SpeedGauge(
                 )
             }
 
-            // Inner battery ring.
             val innerInset = inset + stroke * 1.6f
             val innerStroke = stroke * 0.42f
             val innerSize = Size(size.width - innerInset * 2, size.height - innerInset * 2)
@@ -137,7 +173,6 @@ fun SpeedGauge(
                 )
             }
 
-            // Tick marks every 10% of the scale.
             val radius = min(size.width, size.height) / 2f - inset
             val center = Offset(size.width / 2f, size.height / 2f)
             repeat(13) { index ->
@@ -181,13 +216,231 @@ fun SpeedGauge(
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.labelLarge,
-                // Live figures earn the accent colour; a standing "not connected" does not.
                 color = if (active) {
                     MaterialTheme.colorScheme.primary
                 } else {
                     MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
                 },
                 modifier = Modifier.padding(top = 8.dp),
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun ExpressiveSpeedGauge(
+    speed: Float,
+    maxSpeed: Float,
+    battery: Int,
+    unit: String,
+    subtitle: String,
+    active: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val targetSpeedFraction = if (maxSpeed <= 0f) 0f else (speed / maxSpeed).coerceIn(0f, 1f)
+    val animatedSpeed by animateFloatAsState(
+        targetValue = targetSpeedFraction,
+        animationSpec = MaterialTheme.motionScheme.slowSpatialSpec(),
+        label = "expSpeed",
+    )
+    val animatedBattery by animateFloatAsState(
+        targetValue = (battery / 100f).coerceIn(0f, 1f),
+        animationSpec = MaterialTheme.motionScheme.slowSpatialSpec(),
+        label = "expBattery",
+    )
+    val dim by animateFloatAsState(
+        targetValue = if (active) 1f else 0.35f,
+        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+        label = "expDim",
+    )
+
+    val cornerPercent = (50f - animatedSpeed * 34f).roundToInt().coerceIn(16, 50)
+    val squircleShape = RoundedCornerShape(cornerPercent)
+
+    val primary = MaterialTheme.colorScheme.primary
+    val tertiary = MaterialTheme.colorScheme.tertiary
+    val trackBg = MaterialTheme.colorScheme.surfaceContainerHighest
+    val batteryColor = when {
+        battery <= 15 -> MaterialTheme.colorScheme.error
+        battery <= 30 -> MaterialTheme.colorScheme.tertiary
+        else -> MaterialTheme.colorScheme.primary
+    }
+
+    Row(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(horizontal = 6.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        // Left: Thick Vertical Speed Progress Bar across full height
+        VerticalPillBar(
+            fraction = animatedSpeed,
+            brush = Brush.verticalGradient(
+                listOf(tertiary.copy(alpha = dim), primary.copy(alpha = dim))
+            ),
+            trackColor = trackBg,
+            icon = Icons.Filled.Speed,
+            accentColor = primary,
+            active = active,
+            label = formatSpeed(speed),
+            modifier = Modifier
+                .width(56.dp)
+                .fillMaxHeight(),
+        )
+
+        // Center: Speed pod on top, subtitle status on bottom
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            // Upper center: Morphing Squircle Speed Indicator (no border, large and prominent)
+            Surface(
+                shape = squircleShape,
+                color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.6f * dim + 0.25f),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1.35f)
+                    .graphicsLayer {
+                        shadowElevation = (animatedSpeed * 8f).dp.toPx()
+                        shape = squircleShape
+                        clip = false
+                    },
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxSize().padding(4.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                    ) {
+                        Text(
+                            text = formatSpeed(speed),
+                            fontSize = 54.sp,
+                            fontWeight = FontWeight.Black,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = dim),
+                            style = MaterialTheme.typography.displayLarge,
+                            lineHeight = 56.sp,
+                        )
+                        Text(
+                            text = unit,
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = dim),
+                        )
+                    }
+                }
+            }
+
+            // Lower center: Subtitle status & voltage without being crowded
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(0.65f),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = if (active) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f)
+                    },
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                )
+            }
+        }
+
+        // Right: Thick Vertical Battery Progress Bar across full height
+        VerticalPillBar(
+            fraction = animatedBattery,
+            brush = Brush.verticalGradient(
+                listOf(batteryColor.copy(alpha = dim), batteryColor.copy(alpha = dim * 0.85f))
+            ),
+            trackColor = trackBg,
+            icon = if (battery <= 20) Icons.Filled.BatteryAlert else Icons.Filled.BatteryFull,
+            accentColor = batteryColor,
+            active = active,
+            label = "$battery%",
+            modifier = Modifier
+                .width(56.dp)
+                .fillMaxHeight(),
+        )
+    }
+}
+
+@Composable
+private fun VerticalPillBar(
+    fraction: Float,
+    brush: Brush,
+    trackColor: Color,
+    icon: ImageVector,
+    accentColor: Color,
+    active: Boolean,
+    label: String,
+    modifier: Modifier = Modifier,
+) {
+    val pillShape = RoundedCornerShape(16.dp)
+
+    val iconTint by androidx.compose.animation.animateColorAsState(
+        targetValue = when {
+            fraction >= 0.78f -> MaterialTheme.colorScheme.onPrimary
+            active -> accentColor
+            else -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+        },
+        label = "iconTint",
+    )
+
+    val textColor by androidx.compose.animation.animateColorAsState(
+        targetValue = when {
+            fraction >= 0.12f -> MaterialTheme.colorScheme.onPrimary
+            else -> MaterialTheme.colorScheme.onSurface
+        },
+        label = "textColor",
+    )
+
+    Box(
+        modifier = modifier
+            .background(trackColor, pillShape)
+            .clip(pillShape),
+        contentAlignment = Alignment.BottomCenter,
+    ) {
+        // Bottom-up progress fill
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(fraction.coerceIn(0f, 1f))
+                .background(brush),
+        )
+        // Overlay content: icon on top, value on bottom inside the pill
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(vertical = 10.dp, horizontal = 4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = iconTint,
+                modifier = Modifier.size(24.dp),
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.ExtraBold,
+                color = textColor,
+                maxLines = 1,
+                textAlign = TextAlign.Center,
             )
         }
     }

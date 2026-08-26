@@ -222,6 +222,9 @@
     <string name="remove_tile">Remove</string>
     <string name="tile_spacer">Spacer</string>
     <string name="tile_gauge">Speedometer</string>
+    <string name="gauge_style">Speedometer style</string>
+    <string name="gauge_style_classic">Classic (dial)</string>
+    <string name="gauge_style_expressive">Expressive (Material 3)</string>
     <string name="tile_connection">Connection</string>
     <string name="tile_mode">Riding mode</string>
     <string name="tile_speed_limit">Speed limit</string>

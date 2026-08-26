@@ -208,6 +208,9 @@
     <string name="remove_tile">Убрать</string>
     <string name="tile_spacer">Пустое место</string>
     <string name="tile_gauge">Спидометр</string>
+    <string name="gauge_style">Стиль спидометра</string>
+    <string name="gauge_style_classic">Обычный (круговой)</string>
+    <string name="gauge_style_expressive">Экспрессивный (Material 3)</string>
     <string name="tile_connection">Подключение</string>
     <string name="tile_mode">Режим езды</string>
     <string name="tile_speed_limit">Лимит скорости</string>

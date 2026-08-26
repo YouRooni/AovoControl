@@ -468,4 +468,9 @@ class AovoViewModel : ViewModel() {
         }
     }
 
+    fun setGaugeStyle(style: GaugeStyle) {
+        viewModelScope.launch {
+            prefs.setGaugeStyle(style)
+        }
+    }
 }
