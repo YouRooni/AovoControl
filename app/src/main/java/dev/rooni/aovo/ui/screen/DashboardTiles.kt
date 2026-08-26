@@ -61,6 +61,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalDensity
 import kotlin.math.roundToInt
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -601,27 +602,41 @@ private fun ConnectionTile(
         stringResource(if (connected) R.string.connected else R.string.disconnected)
     }
 
-    if (tile.clampedSpan() <= 2) {
-        // Compact Quick Settings tile layout
-        Surface(
-            shape = shape,
-            color = if (connected) {
-                MaterialTheme.colorScheme.primaryContainer
-            } else {
-                MaterialTheme.colorScheme.surfaceContainerHigh
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .then(
-                    if (!context.editing) Modifier.clickable {
+    val isCompact = tile.clampedSpan() <= 2
+    val animatedHeight by androidx.compose.animation.core.animateDpAsState(
+        targetValue = if (isCompact) TileMetrics.MinHeight else 74.dp,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = Spring.StiffnessMediumLow,
+        ),
+        label = "connectionTileHeight",
+    )
+
+    Surface(
+        shape = shape,
+        color = if (connected) {
+            MaterialTheme.colorScheme.primaryContainer
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerHigh
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(animatedHeight)
+            .then(
+                if (!context.editing) {
+                    Modifier.clickable {
                         if (connected) context.viewModel.disconnect() else context.onOpenDevices()
-                    } else Modifier
-                ),
-        ) {
+                    }
+                } else {
+                    Modifier
+                }
+            ),
+    ) {
+        if (isCompact) {
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 14.dp, vertical = 14.dp),
+                    .fillMaxSize()
+                    .padding(horizontal = 14.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
@@ -632,11 +647,11 @@ private fun ConnectionTile(
                     } else {
                         MaterialTheme.colorScheme.surfaceContainerHighest
                     },
-                    modifier = Modifier.size(38.dp),
+                    modifier = Modifier.size(42.dp),
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         if (busy) {
-                            LoadingIndicator(modifier = Modifier.size(20.dp))
+                            LoadingIndicator(modifier = Modifier.size(22.dp))
                         } else {
                             Icon(
                                 imageVector = if (connected) Icons.Filled.BluetoothConnected
@@ -644,12 +659,15 @@ private fun ConnectionTile(
                                 contentDescription = null,
                                 tint = if (connected) MaterialTheme.colorScheme.onPrimary
                                 else MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(20.dp),
+                                modifier = Modifier.size(22.dp),
                             )
                         }
                     }
                 }
-                Column(modifier = Modifier.weight(1f)) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.Center,
+                ) {
                     Text(
                         text = displayName,
                         style = MaterialTheme.typography.titleSmall,
@@ -666,6 +684,7 @@ private fun ConnectionTile(
                         else if (busy) stringResource(R.string.connecting)
                         else stringResource(R.string.tap_to_connect),
                         style = MaterialTheme.typography.bodySmall,
+                        maxLines = 1,
                         color = if (connected) {
                             MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                         } else {
@@ -674,93 +693,84 @@ private fun ConnectionTile(
                     )
                 }
             }
-        }
-        return
-    }
-
-    // Full 4-slot card layout
-    Surface(
-        shape = shape,
-        color = if (connected) {
-            MaterialTheme.colorScheme.primaryContainer
         } else {
-            MaterialTheme.colorScheme.surfaceContainerHigh
-        },
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 18.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            Surface(
-                shape = androidx.compose.foundation.shape.CircleShape,
-                color = if (connected) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.surfaceContainerHighest
-                },
-                modifier = Modifier.size(46.dp),
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 18.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    if (busy) {
-                        LoadingIndicator(modifier = Modifier.size(24.dp))
+                Surface(
+                    shape = androidx.compose.foundation.shape.CircleShape,
+                    color = if (connected) {
+                        MaterialTheme.colorScheme.primary
                     } else {
-                        Icon(
-                            imageVector = if (connected) Icons.Filled.BluetoothConnected
-                            else Icons.Filled.BluetoothDisabled,
-                            contentDescription = null,
-                            tint = if (connected) {
-                                MaterialTheme.colorScheme.onPrimary
-                            } else {
-                                MaterialTheme.colorScheme.onSurfaceVariant
-                            },
-                            modifier = Modifier.size(24.dp),
-                        )
+                        MaterialTheme.colorScheme.surfaceContainerHighest
+                    },
+                    modifier = Modifier.size(46.dp),
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        if (busy) {
+                            LoadingIndicator(modifier = Modifier.size(24.dp))
+                        } else {
+                            Icon(
+                                imageVector = if (connected) Icons.Filled.BluetoothConnected
+                                else Icons.Filled.BluetoothDisabled,
+                                contentDescription = null,
+                                tint = if (connected) {
+                                    MaterialTheme.colorScheme.onPrimary
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                },
+                                modifier = Modifier.size(24.dp),
+                            )
+                        }
                     }
                 }
-            }
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = displayName,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = if (connected) {
-                        MaterialTheme.colorScheme.onPrimaryContainer
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    },
-                )
-                Text(
-                    text = if (connected) {
-                        stringResource(R.string.ready_to_ride) + " · " + context.telemetry.battery + "%"
-                    } else if (busy) {
-                        stringResource(R.string.connecting)
-                    } else {
-                        stringResource(R.string.tap_to_connect)
-                    },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (connected) {
-                        MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f)
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    },
-                )
-            }
-            FilledTonalButton(
-                enabled = !context.editing,
-                onClick = if (connected) {
-                    { context.viewModel.disconnect() }
-                } else {
-                    context.onOpenDevices
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.Center,
+                ) {
+                    Text(
+                        text = displayName,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = if (connected) {
+                            MaterialTheme.colorScheme.onPrimaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        },
+                    )
+                    Text(
+                        text = if (connected) {
+                            stringResource(R.string.ready_to_ride) + " · " + context.telemetry.battery + "%"
+                        } else if (busy) {
+                            stringResource(R.string.connecting)
+                        } else {
+                            stringResource(R.string.tap_to_connect)
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (connected) {
+                            MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f)
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                    )
                 }
-            ) {
-                Text(
-                    text = stringResource(if (connected) R.string.disconnect else R.string.connect),
-                    fontWeight = FontWeight.SemiBold,
-                )
+                FilledTonalButton(
+                    enabled = !context.editing,
+                    onClick = if (connected) {
+                        { context.viewModel.disconnect() }
+                    } else {
+                        context.onOpenDevices
+                    },
+                ) {
+                    Text(
+                        text = stringResource(if (connected) R.string.disconnect else R.string.connect),
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
             }
         }
     }
