@@ -132,6 +132,7 @@ class AovoCore(context: Context) : AovoGatt.Listener {
 
     private var authJob: Job? = null
     private var pollJob: Job? = null
+    private var monitorJob: Job? = null
     private var otaJob: Job? = null
     private var otaChunks: List<ByteArray> = emptyList()
     private var otaIndex = 0
@@ -513,6 +514,7 @@ class AovoCore(context: Context) : AovoGatt.Listener {
             gatt.writeData(Protocol.keepFrame())
             delay(50)
         }
+        startMonitoringLoop()
     }
 
     /** Writes one 16-bit register and lets the read loop pick the new value back up. */
@@ -950,6 +952,7 @@ class AovoCore(context: Context) : AovoGatt.Listener {
                 gatt.writeData(Protocol.keepFrame())
                 delay(50)
             }
+            startMonitoringLoop()
             delay(400)
             requestEscInfo()
         }
@@ -994,7 +997,7 @@ class AovoCore(context: Context) : AovoGatt.Listener {
 
     // ---- ViCont (FEE0) ---------------------------------------------------------------
 
-        private fun onViContReady() {
+    private fun onViContReady() {
         SessionLog.state("ViCont ready", "no password stage")
         viContTuningLoaded = true
         authJob?.cancel()
@@ -1011,10 +1014,11 @@ class AovoCore(context: Context) : AovoGatt.Listener {
                 gatt.writeData(ViContProtocol.query(command))
                 delay(120)
             }
+            startMonitoringLoop()
         }
     }
 
-        private fun onLegacyNotification(payload: ByteArray) {
+    private fun onLegacyNotification(payload: ByteArray) {
         legacyReader.append(payload)
     }
 
@@ -1546,11 +1550,27 @@ class AovoCore(context: Context) : AovoGatt.Listener {
         clearWatchdog()
         authJob?.cancel(); authJob = null
         pollJob?.cancel(); pollJob = null
+        monitorJob?.cancel(); monitorJob = null
         otaJob?.cancel(); otaJob = null
         reader.reset()
     }
 
-        private fun issueRequest(frame: ByteArray) {
+    private fun startMonitoringLoop() {
+        monitorJob?.cancel()
+        monitorJob = scope.launch {
+            while (true) {
+                delay(200)
+                if (!gatt.isConnected || mode != Mode.MONITORING) continue
+                if (isViCont) {
+                    gatt.writeData(ViContProtocol.command(ViContProtocol.CMD_START_TELEMETRY))
+                } else {
+                    gatt.writeData(Protocol.keepFrame())
+                }
+            }
+        }
+    }
+
+    private fun issueRequest(frame: ByteArray) {
         lastRequest = frame
         requestAttempts = 0
         gatt.writeData(frame)
@@ -1613,6 +1633,7 @@ class AovoCore(context: Context) : AovoGatt.Listener {
             gatt.writeData(Protocol.keepFrame())
             delay(50)
         }
+        startMonitoringLoop()
     }
 
     private fun clearWatchdog() {
